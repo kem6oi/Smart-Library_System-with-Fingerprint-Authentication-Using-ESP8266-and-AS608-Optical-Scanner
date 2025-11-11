@@ -1,11 +1,15 @@
-<?php 
-// DB credentials.
-define('DB_HOST','localhost');
-define('DB_USER','root');
-define('DB_PASS','');
-define('DB_NAME','library');
+<?php
+// Load environment variables
+require_once(__DIR__ . '/env.php');
 
-$telegramBotToken = '7304654930:AAF2Q_is81qMPx210n-hz1DkEYVuILPQfKA';
+// DB credentials from environment variables
+define('DB_HOST', env('DB_HOST', 'localhost'));
+define('DB_USER', env('DB_USER', 'root'));
+define('DB_PASS', env('DB_PASS', ''));
+define('DB_NAME', env('DB_NAME', 'library'));
+
+// Telegram Bot Token from environment variables
+$telegramBotToken = env('TELEGRAM_BOT_TOKEN');
 
 // Establish database connection.
 try

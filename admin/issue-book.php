@@ -2,8 +2,8 @@
 session_start();
 include('includes/config.php');
 
-// Telegram Bot Configuration
-define('TELEGRAM_BOT_TOKEN', '7304654930:AAF2Q_is81qMPx210n-hz1DkEYVuILPQfKA'); // Replace with your bot token
+// Telegram Bot Configuration - Load from environment variables
+define('TELEGRAM_BOT_TOKEN', env('TELEGRAM_BOT_TOKEN'));
 define('TELEGRAM_API_URL', 'https://api.telegram.org/bot' . TELEGRAM_BOT_TOKEN);
 
 // Function to send Telegram message

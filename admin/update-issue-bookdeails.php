@@ -42,7 +42,7 @@ $rstatus=1;
          $billingLink = "http://t.me/kimwetiobot/librarylogin";
 
         // Format Telegram Message
-        $botToken = '7304654930:AAF2Q_is81qMPx210n-hz1DkEYVuILPQfKA'; // Replace with your bot token
+        $botToken = env('TELEGRAM_BOT_TOKEN');
         $message = "Dear " . $studentName . ",\n" .
                 "You have returned the book: " . $bookName . " (ISBN: " . $bookISBN . ").\n" ;
            if ($fine > 0) {

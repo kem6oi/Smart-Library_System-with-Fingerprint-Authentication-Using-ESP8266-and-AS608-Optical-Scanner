@@ -114,7 +114,7 @@ header('location:index.php');
                      if ($query->rowCount() > 0) {
                          $_SESSION['msg'] = "Book checked out successfully.";
                          // Format telegram message for checkout success
-                         $botToken = '7304654930:AAF2Q_is81qMPx210n-hz1DkEYVuILPQfKA'; // Replace with your bot token
+                         $botToken = env('TELEGRAM_BOT_TOKEN');
                          $message = "Dear " . $studentName . ",\n" .
                              "You have successfully checked out book: " . $bookName. ", ISBN: ".$bookISBN."\n".
                              "Please return it by " . $expectedReturnDate;

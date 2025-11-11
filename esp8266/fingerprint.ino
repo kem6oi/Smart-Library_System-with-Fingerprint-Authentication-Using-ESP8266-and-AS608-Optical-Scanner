@@ -4,13 +4,10 @@
 #include <ESP8266HTTPClient.h>
 #include <SoftwareSerial.h>
 
-// WiFi credentials
-const char* ssid = "Conman"; // ------------- Make sure this is your WiFi Network Name
-const char* password = "password"; // ----------- Make sure this is your WiFi Password
-
-// Server details
-// *** UPDATED: Point to the correct PHP file ***
-const char* serverUrl = "http://192.168.203.181/library0-2w/admin/fingerprint_auth.php"; // Web server IP/path
+// Load configuration from config.h (WiFi credentials and server URL)
+// Copy config.h.example to config.h and update with your credentials
+// NEVER commit config.h to version control
+#include "config.h"
 
 // Fingerprint sensor on D5 (GPIO-14) and D6 (GPIO-12)
 SoftwareSerial mySerial(14, 12); // RX, TX --> Connect Sensor TX to D5(GPIO-14), Sensor RX to D6(GPIO-12)

@@ -25,7 +25,7 @@
 
         $verificationCode = generateVerificationCode();
 
-        $botToken = '7304654930:AAF2Q_is81qMPx210n-hz1DkEYVuILPQfKA';
+        $botToken = env('TELEGRAM_BOT_TOKEN');
         $message = "Your verification code is: " . $verificationCode;
         sendTelegramMessage($telegramChatId, $message, $botToken);
 

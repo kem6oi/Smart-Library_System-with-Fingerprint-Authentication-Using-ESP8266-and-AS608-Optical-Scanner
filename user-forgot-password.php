@@ -38,8 +38,8 @@ if (isset($_POST['submitSid'])) {
 
          
         $pythonScriptPath = 'generate_code.py';
-        // Get bot token from config file (for security)
-        $botToken = '7304654930:AAF2Q_is81qMPx210n-hz1DkEYVuILPQfKA';
+        // Get bot token from environment variables
+        $botToken = env('TELEGRAM_BOT_TOKEN');
 
         // Execute the Python script and capture the output
         $command = "python " . escapeshellarg($pythonScriptPath) . " " . escapeshellarg($telegramChatId) . " " . escapeshellarg($botToken);

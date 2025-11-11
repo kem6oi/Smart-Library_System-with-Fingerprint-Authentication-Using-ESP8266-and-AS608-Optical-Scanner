@@ -45,7 +45,7 @@ if (isset($_GET['approve']) && is_numeric($_GET['approve'])) {
             $query->bindParam(':book_id', $bookId, PDO::PARAM_INT);
             $query->execute();
 
-            $botToken = '7304654930:AAF2Q_is81qMPx210n-hz1DkEYVuILPQfKA';
+            $botToken = env('TELEGRAM_BOT_TOKEN');
             $message = "Dear " . $studentName . ",\n" .
                       "Your Reserved book, ISBN: " . $bookISBN. " ".$bookName." is ready to be checked out.\n" .
                       "Use this code within the next 12 hours to checkout: " . $authCode;
