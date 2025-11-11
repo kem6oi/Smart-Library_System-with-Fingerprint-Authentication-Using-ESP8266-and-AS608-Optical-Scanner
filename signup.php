@@ -1,5 +1,6 @@
 <?php
     include_once('includes/init.php');
+    include_once('includes/password.php');
 
     function generateVerificationCode() {
         return rand(100000, 999999);
@@ -12,7 +13,18 @@
     if(isset($_POST['signup'])) {
         $fullName = $_POST['fullname'];
         $email = $_POST['email'];
-        $password = md5($_POST['password']);
+        $plainPassword = $_POST['password'];
+
+        // Server-side password strength validation
+        $passwordValidation = validatePasswordStrength($plainPassword);
+        if (!$passwordValidation['valid']) {
+            $_SESSION['signup_error'] = implode(', ', $passwordValidation['errors']);
+            header('location:signup.php');
+            exit();
+        }
+
+        // Hash password using bcrypt
+        $password = hashPassword($plainPassword);
         $telegramChatId = $_POST['telegram_chat_id'];
 
         $count_my_page = "studentid.txt";

@@ -4,6 +4,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 session_start();
 include('includes/config.php');
+include('includes/password.php');
 
 $showSidForm = true;
 $showVerificationForm = false;
@@ -98,42 +99,54 @@ if (isset($_POST['verifyCode'])) {
 // Handle final password change
 if (isset($_POST['changePassword'])) {
         $email = $_SESSION['recovery_email'];
-        $newpassword = md5($_POST['newpassword']);
+        $newPasswordPlain = $_POST['newpassword'];
 
-       $sql = "SELECT EmailId FROM tblstudents WHERE EmailId=:email";
-       try {
-            $query = $dbh->prepare($sql);
-            $query->bindParam(':email', $email, PDO::PARAM_STR);
-             $query->execute();
-            $results = $query->fetchAll(PDO::FETCH_OBJ);
-       }  catch (PDOException $e) {
-           $_SESSION['error'] = "Database Error: " . $e->getMessage();
-             $showSidForm = false;
+        // Validate new password strength
+        $passwordValidation = validatePasswordStrength($newPasswordPlain);
+        if (!$passwordValidation['valid']) {
+            $_SESSION['error'] = 'Password requirements: ' . implode(', ', $passwordValidation['errors']);
+            $showSidForm = false;
             $showVerificationForm = false;
             $showChangePasswordForm = true;
-            exit();
+        } else {
+            // Hash password with bcrypt
+            $newpassword = hashPassword($newPasswordPlain);
+
+            $sql = "SELECT EmailId FROM tblstudents WHERE EmailId=:email";
+            try {
+                $query = $dbh->prepare($sql);
+                $query->bindParam(':email', $email, PDO::PARAM_STR);
+                $query->execute();
+                $results = $query->fetchAll(PDO::FETCH_OBJ);
+            }  catch (PDOException $e) {
+                $_SESSION['error'] = "Database Error: " . $e->getMessage();
+                $showSidForm = false;
+                $showVerificationForm = false;
+                $showChangePasswordForm = true;
+                exit();
+            }
+
+            if ($query->rowCount() > 0) {
+                $con = "update tblstudents set Password=:newpassword where EmailId=:email";
+                $chngpwd1 = $dbh->prepare($con);
+                $chngpwd1->bindParam(':email', $email, PDO::PARAM_STR);
+                $chngpwd1->bindParam(':newpassword', $newpassword, PDO::PARAM_STR);
+                $chngpwd1->execute();
+                $_SESSION['msg'] = "Your password has been successfully changed.";
+                // Clear session data after password change
+                unset($_SESSION['recovery_code']);
+                unset($_SESSION['recovery_email']);
+                // Redirect to login page
+                echo "<script type='text/javascript'> document.location ='index.php'; </script>";
+                exit();
+
+            } else {
+                $_SESSION['error'] = "Invalid Email id.";
+                $showSidForm = false;
+                $showVerificationForm = false;
+                $showChangePasswordForm = true;
+            }
         }
-
-        if ($query->rowCount() > 0) {
-            $con = "update tblstudents set Password=:newpassword where EmailId=:email";
-            $chngpwd1 = $dbh->prepare($con);
-            $chngpwd1->bindParam(':email', $email, PDO::PARAM_STR);
-            $chngpwd1->bindParam(':newpassword', $newpassword, PDO::PARAM_STR);
-            $chngpwd1->execute();
-              $_SESSION['msg'] = "Your password has been successfully changed.";
-            // Clear session data after password change
-            unset($_SESSION['recovery_code']);
-            unset($_SESSION['recovery_email']);
-             // Redirect to login page
-             echo "<script type='text/javascript'> document.location ='index.php'; </script>";
-            exit();
-
-         } else {
-               $_SESSION['error'] = "Invalid Email id.";
-               $showSidForm = false;
-               $showVerificationForm = false;
-               $showChangePasswordForm = true;
-         }
 }
 
 

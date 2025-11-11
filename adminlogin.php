@@ -2,31 +2,48 @@
 session_start();
 error_reporting(0);
 include('includes/config.php');
+include('includes/password.php');
+
 if($_SESSION['alogin']!=''){
 $_SESSION['alogin']='';
 }
 if(isset($_POST['login']))
 {
- 
+
 if ($_POST["vercode"] != $_SESSION["vercode"] OR $_SESSION["vercode"]=='')  {
         echo "<script>alert('Incorrect verification code');</script>" ;
-    } 
+    }
         else {
 
 $username=$_POST['username'];
-$password=md5($_POST['password']);
-$sql ="SELECT UserName,Password FROM admin WHERE UserName=:username and Password=:password";
+$plainPassword=$_POST['password'];
+
+// Fetch admin with only username (don't include password in WHERE clause)
+$sql ="SELECT UserName,Password,id FROM admin WHERE UserName=:username";
 $query= $dbh -> prepare($sql);
 $query-> bindParam(':username', $username, PDO::PARAM_STR);
-$query-> bindParam(':password', $password, PDO::PARAM_STR);
 $query-> execute();
 $results=$query->fetchAll(PDO::FETCH_OBJ);
+
 if($query->rowCount() > 0)
 {
-$_SESSION['alogin']=$_POST['username'];
-echo "<script type='text/javascript'> document.location ='admin/dashboard.php'; </script>";
+    $result = $results[0];
+    // Verify password using bcrypt-compatible function (supports legacy MD5)
+    if (verifyPassword($plainPassword, $result->Password)) {
+        // Regenerate session ID to prevent session fixation
+        session_regenerate_id(true);
+
+        $_SESSION['alogin']=$_POST['username'];
+
+        // Automatically rehash MD5 passwords to bcrypt on successful login
+        rehashPasswordIfNeeded($dbh, $plainPassword, $result->Password, $result->id, 'admin', 'id');
+
+        echo "<script type='text/javascript'> document.location ='admin/dashboard.php'; </script>";
+    } else {
+        echo "<script>alert('Invalid username or password');</script>";
+    }
 } else{
-echo "<script>alert('Invalid Details');</script>";
+    echo "<script>alert('Invalid username or password');</script>";
 }
 }
 }

@@ -1,34 +1,52 @@
 <?php
 session_start();
 include('includes/config.php');
+include('includes/password.php');
 error_reporting(0);
 if(strlen($_SESSION['login'])==0)
-    {   
+    {
 header('location:index.php');
 }
-else{ 
+else{
 if(isset($_POST['change']))
   {
-$password=md5($_POST['password']);
-$newpassword=md5($_POST['newpassword']);
+$currentPassword=$_POST['password'];
+$newPasswordPlain=$_POST['newpassword'];
 $email=$_SESSION['login'];
-  $sql ="SELECT Password FROM tblstudents WHERE EmailId=:email and Password=:password";
+
+  // Fetch current password hash
+  $sql ="SELECT Password FROM tblstudents WHERE EmailId=:email";
 $query= $dbh -> prepare($sql);
 $query-> bindParam(':email', $email, PDO::PARAM_STR);
-$query-> bindParam(':password', $password, PDO::PARAM_STR);
 $query-> execute();
 $results = $query -> fetchAll(PDO::FETCH_OBJ);
+
 if($query -> rowCount() > 0)
 {
-$con="update tblstudents set Password=:newpassword where EmailId=:email";
-$chngpwd1 = $dbh->prepare($con);
-$chngpwd1-> bindParam(':email', $email, PDO::PARAM_STR);
-$chngpwd1-> bindParam(':newpassword', $newpassword, PDO::PARAM_STR);
-$chngpwd1->execute();
-$msg="Your Password succesfully changed";
+    $result = $results[0];
+    // Verify current password
+    if (verifyPassword($currentPassword, $result->Password)) {
+        // Validate new password strength
+        $passwordValidation = validatePasswordStrength($newPasswordPlain);
+        if (!$passwordValidation['valid']) {
+            $error = implode(', ', $passwordValidation['errors']);
+        } else {
+            // Hash new password with bcrypt
+            $newpassword = hashPassword($newPasswordPlain);
+
+            $con="update tblstudents set Password=:newpassword where EmailId=:email";
+            $chngpwd1 = $dbh->prepare($con);
+            $chngpwd1-> bindParam(':email', $email, PDO::PARAM_STR);
+            $chngpwd1-> bindParam(':newpassword', $newpassword, PDO::PARAM_STR);
+            $chngpwd1->execute();
+            $msg="Your Password successfully changed";
+        }
+    } else {
+        $error="Your current password is wrong";
+    }
 }
 else {
-$error="Your current password is wrong";  
+$error="User not found";
 }
 }
 

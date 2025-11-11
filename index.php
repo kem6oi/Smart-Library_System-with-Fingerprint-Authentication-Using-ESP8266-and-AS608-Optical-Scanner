@@ -2,43 +2,55 @@
 session_start();
 error_reporting(0);
 include('includes/config.php');
+include('includes/password.php');
+
 if($_SESSION['login']!=''){
 $_SESSION['login']='';
 }
 if(isset($_POST['login']))
 {
-    
+
     if ($_POST["vercode"] != $_SESSION["vercode"] OR $_SESSION["vercode"]=='')  {
         echo "<script>alert('Incorrect verification code');</script>" ;
     }
     else {
         $email=$_POST['emailid'];
-        $password=md5($_POST['password']);
-        $sql ="SELECT EmailId,Password,StudentId,Status FROM tblstudents WHERE EmailId=:email and Password=:password";
+        $plainPassword=$_POST['password'];
+
+        // Fetch user with only email (don't include password in WHERE clause)
+        $sql ="SELECT EmailId,Password,StudentId,Status FROM tblstudents WHERE EmailId=:email";
         $query= $dbh -> prepare($sql);
         $query-> bindParam(':email', $email, PDO::PARAM_STR);
-        $query-> bindParam(':password', $password, PDO::PARAM_STR);
         $query-> execute();
         $results=$query->fetchAll(PDO::FETCH_OBJ);
 
         if($query->rowCount() > 0)
         {
             foreach ($results as $result) {
-                $_SESSION['stdid']=$result->StudentId;
-                if($result->Status==1)
-                {
-                    $_SESSION['login']=$_POST['emailid'];
-                    echo "<script type='text/javascript'> document.location ='dashboard.php'; </script>";
-                } else {
-                    echo "<script>alert('Your Account Has been blocked .Please contact admin');</script>";
+                // Verify password using bcrypt-compatible function (supports legacy MD5)
+                if (verifyPassword($plainPassword, $result->Password)) {
+                    if($result->Status==1)
+                    {
+                        // Regenerate session ID to prevent session fixation
+                        session_regenerate_id(true);
 
+                        $_SESSION['stdid']=$result->StudentId;
+                        $_SESSION['login']=$_POST['emailid'];
+
+                        // Automatically rehash MD5 passwords to bcrypt on successful login
+                        rehashPasswordIfNeeded($dbh, $plainPassword, $result->Password, $result->StudentId, 'tblstudents', 'StudentId');
+
+                        echo "<script type='text/javascript'> document.location ='dashboard.php'; </script>";
+                    } else {
+                        echo "<script>alert('Your Account Has been blocked. Please contact admin');</script>";
+                    }
+                } else {
+                    echo "<script>alert('Invalid email or password');</script>";
                 }
             }
-
         }
-
         else{
-            echo "<script>alert('Invalid Details');</script>";
+            echo "<script>alert('Invalid email or password');</script>";
         }
     }
 }
