@@ -1,0 +1,16 @@
+// ESP8266 Configuration File
+// Copy this file to config.h and update with your actual credentials
+// NEVER commit config.h to version control (it's in .gitignore)
+
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// WiFi credentials
+const char* ssid = "Your_WiFi_Network_Name";        // Your WiFi SSID
+const char* password = "Your_WiFi_Password";        // Your WiFi Password
+
+// Server details
+// Replace with your server IP address and path
+const char* serverUrl = "http://192.168.1.100/library0-2w/admin/fingerprint_auth.php";
+
+#endif
